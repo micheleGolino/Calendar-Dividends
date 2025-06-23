@@ -5,12 +5,53 @@ import numpy as np
 
 class DividendCalendar:
     def __init__(self):
-        # Lista di simboli azionari popolari con dividendi
+        # Lista estesa di simboli azionari popolari con dividendi
         self.symbols = [
-            'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'NVDA', 'META', 'JNJ', 'JPM', 'PG',
-            'KO', 'PFE', 'DIS', 'WMT', 'V', 'MA', 'HD', 'BAC', 'XOM', 'CVX',
-            'INTC', 'IBM', 'GE', 'T', 'VZ', 'MRK', 'ABBV', 'NKE', 'MCD', 'MMM',
-            'UNH', 'CVS', 'WBA', 'COST', 'TGT', 'LOW', 'SBUX', 'PYPL', 'NFLX', 'CRM'
+            # Tech Giants
+            'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'NVDA', 'META', 'ORCL', 'CRM', 'ADBE',
+            'INTC', 'IBM', 'CSCO', 'PYPL', 'NFLX', 'AMD', 'QCOM', 'TXN', 'AVGO', 'NOW',
+            
+            # Healthcare & Pharma
+            'JNJ', 'PFE', 'MRK', 'ABBV', 'UNH', 'CVS', 'WBA', 'BMY', 'LLY', 'TMO',
+            'ABT', 'MDT', 'GILD', 'AMGN', 'DHR', 'SYK', 'ZTS', 'BDX', 'BSX', 'EW',
+            
+            # Financial Services
+            'JPM', 'BAC', 'WFC', 'GS', 'MS', 'C', 'USB', 'PNC', 'TFC', 'COF',
+            'AXP', 'BLK', 'SCHW', 'CB', 'MMC', 'AIG', 'PRU', 'MET', 'AFL', 'ALL',
+            
+            # Consumer Goods & Retail
+            'PG', 'KO', 'PEP', 'WMT', 'COST', 'TGT', 'HD', 'LOW', 'MCD', 'SBUX',
+            'NKE', 'DIS', 'CL', 'KMB', 'GIS', 'K', 'HSY', 'MKC', 'CPB', 'CAG',
+            
+            # Energy
+            'XOM', 'CVX', 'COP', 'EOG', 'SLB', 'PSX', 'VLO', 'MPC', 'KMI', 'OKE',
+            'EPD', 'ET', 'WMB', 'ENB', 'TRP', 'SU', 'CNQ', 'IMO', 'CVE', 'HES',
+            
+            # Utilities
+            'NEE', 'DUK', 'SO', 'D', 'EXC', 'SRE', 'AEP', 'XEL', 'PEG', 'ED',
+            'ES', 'FE', 'ETR', 'WEC', 'DTE', 'PPL', 'CMS', 'NI', 'LNT', 'ATO',
+            
+            # Industrial & Manufacturing
+            'GE', 'MMM', 'HON', 'UPS', 'CAT', 'DE', 'BA', 'LMT', 'RTX', 'GD',
+            'NOC', 'EMR', 'ITW', 'PH', 'ROK', 'DOV', 'ETN', 'CMI', 'IR', 'JCI',
+            
+            # Telecom
+            'T', 'VZ', 'TMUS', 'CHTR', 'CMCSA',
+            
+            # Payment & FinTech
+            'V', 'MA', 'PYPL', 'SQ', 'FIS', 'FISV',
+            
+            # REITs
+            'AMT', 'PLD', 'CCI', 'EQIX', 'SPG', 'O', 'WELL', 'EXR', 'AVB', 'EQR',
+            
+            # Materials & Chemicals
+            'LIN', 'APD', 'ECL', 'SHW', 'DD', 'DOW', 'PPG', 'NEM', 'FCX', 'NUE',
+            
+            # Food & Beverage
+            'MDLZ', 'KHC', 'STZ', 'TAP', 'TSN', 'HRL', 'SJM', 'BF.B',
+            
+            # Aerospace & Defense
+            'LHX', 'TDG', 'HWM', 'TXT', 'CW', 'WWD'
         ]
     
     def calculate_frequency(self, dividends):
