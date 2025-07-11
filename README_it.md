@@ -58,7 +58,7 @@ L'applicazione monitora oltre **140 simboli azionari** suddivisi per settore:
 ### 1. Clona il Repository
 
 ```bash
-git clone https://github.com/tuo-username/Calendar-Dividends.git
+git clone https://github.com/micheleGolino/Calendar-Dividends.git
 cd Calendar-Dividends
 ```
 
