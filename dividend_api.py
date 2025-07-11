@@ -5,7 +5,7 @@ import numpy as np
 
 class DividendCalendar:
     def __init__(self):
-        # Lista estesa di simboli azionari popolari con dividendi
+        # Extended list of popular stock symbols with dividends
         self.symbols = [
             # Tech Giants
             'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'NVDA', 'META', 'ORCL', 'CRM', 'ADBE',
@@ -55,11 +55,11 @@ class DividendCalendar:
         ]
     
     def calculate_frequency(self, dividends):
-        """Calcola la frequenza dei dividendi basata sui dati storici"""
+        """Calculates the dividend frequency based on historical data"""
         if len(dividends) < 2:
             return "N/A"
         
-        # Calcola la differenza media tra i pagamenti
+        # Calculate the average difference between payments
         dates = dividends.index.to_list()
         differences = []
         for i in range(1, len(dates)):
@@ -71,101 +71,117 @@ class DividendCalendar:
         
         avg_diff = np.mean(differences)
         
-        if avg_diff <= 100:  # ~3 mesi
-            return "Trimestrale"
-        elif avg_diff <= 200:  # ~6 mesi
-            return "Semestrale"
-        elif avg_diff <= 400:  # ~1 anno
-            return "Annuale"
+        if avg_diff <= 100:  # ~3 months
+            return "Quarterly"
+        elif avg_diff <= 200:  # ~6 months
+            return "Semi-annual"
+        elif avg_diff <= 400:  # ~1 year
+            return "Annual"
         else:
-            return "Irregolare"
+            return "Irregular"
     
     def calculate_reliability_score(self, dividends, info):
-        """Calcola un punteggio di affidabilità basato su vari fattori"""
+        """Calculates a reliability score based on various factors"""
         score = 0
         
-        # Consistenza dei dividendi negli ultimi 5 anni
-        if len(dividends) >= 20:  # Almeno 5 anni di dividendi trimestrali
+        # Consistency of dividends over the last 5 years
+        if len(dividends) >= 20:  # At least 5 years of quarterly dividends
             score += 3
         elif len(dividends) >= 10:
             score += 2
         elif len(dividends) >= 4:
             score += 1
         
-        # Market cap (maggiore = più affidabile)
+        # Market cap (higher = more reliable)
         market_cap = info.get('marketCap', 0)
         if market_cap > 100_000_000_000:  # >100B
             score += 2
         elif market_cap > 10_000_000_000:  # >10B
             score += 1
         
-        # Payout ratio (più basso = più sostenibile)
+        # Payout ratio (lower = more sustainable)
         payout_ratio = info.get('payoutRatio', 1)
         if payout_ratio and payout_ratio < 0.6:
             score += 2
         elif payout_ratio and payout_ratio < 0.8:
             score += 1
         
-        return min(score, 5)  # Max 5 stelle
+        return min(score, 5)  # Max 5 stars
+    
+    def estimate_next_ex_date(self, last_date, frequency):
+        """Estimates the next ex-dividend date based on frequency"""
+        if frequency == "Quarterly":
+            return last_date + timedelta(days=90)
+        elif frequency == "Semi-annual":
+            return last_date + timedelta(days=180)
+        elif frequency == "Annual":
+            return last_date + timedelta(days=365)
+        else:
+            return last_date + timedelta(days=90)  # Default
+    
+    def calculate_dividend_yield(self, last_dividend, frequency, current_price):
+        """Calculates the dividend yield"""
+        if current_price <= 0:
+            return 0
+            
+        if frequency == "Quarterly":
+            multiplier = 4
+        elif frequency == "Semi-annual":
+            multiplier = 2
+        else:
+            multiplier = 1
+            
+        annual_dividend = last_dividend * multiplier
+        return (annual_dividend / current_price) * 100
+    
+    def process_symbol(self, symbol):
+        """Processes a single symbol and returns dividend data"""
+        ticker = yf.Ticker(symbol)
+        info = ticker.info
+        dividends = ticker.dividends
+        
+        if dividends.empty:
+            return None
+        
+        # Get the latest dividends
+        recent_dividends = dividends.tail(10)
+        last_dividend = recent_dividends.iloc[-1]
+        
+        # Calculate frequency and dates
+        frequency = self.calculate_frequency(recent_dividends)
+        last_date = recent_dividends.index[-1]
+        next_ex_date = self.estimate_next_ex_date(last_date, frequency)
+        payment_date = next_ex_date + timedelta(days=21)
+        
+        # Calculate the yield
+        current_price = info.get('currentPrice', info.get('previousClose', 0))
+        dividend_yield = self.calculate_dividend_yield(last_dividend, frequency, current_price)
+        
+        # Reliability
+        reliability = self.calculate_reliability_score(dividends, info)
+        
+        return {
+            'Company Name': info.get('longName', symbol),
+            'Symbol': symbol,
+            'Ex-Dividend Date': next_ex_date.strftime('%Y-%m-%d'),
+            'Dividend ($)': round(last_dividend, 4),
+            'Frequency': frequency,
+            'Payment Date': payment_date.strftime('%Y-%m-%d'),
+            'Yield (%)': round(dividend_yield, 2),
+            'Reliability': '⭐' * reliability + '☆' * (5 - reliability)
+        }
     
     def get_dividend_data(self):
-        """Recupera i dati sui dividendi per tutti i simboli"""
+        """Retrieves dividend data for all symbols"""
         dividend_data = []
         
         for symbol in self.symbols:
             try:
-                ticker = yf.Ticker(symbol)
-                info = ticker.info
-                dividends = ticker.dividends
-                
-                if dividends.empty:
-                    continue
-                
-                # Prendi gli ultimi dividendi
-                recent_dividends = dividends.tail(10)
-                last_dividend = recent_dividends.iloc[-1]
-                
-                # Stima la prossima ex-dividend date
-                frequency = self.calculate_frequency(recent_dividends)
-                last_date = recent_dividends.index[-1]
-                
-                if frequency == "Trimestrale":
-                    next_ex_date = last_date + timedelta(days=90)
-                elif frequency == "Semestrale":
-                    next_ex_date = last_date + timedelta(days=180)
-                elif frequency == "Annuale":
-                    next_ex_date = last_date + timedelta(days=365)
-                else:
-                    next_ex_date = last_date + timedelta(days=90)  # Default
-                
-                # Calcola il yield
-                current_price = info.get('currentPrice', info.get('previousClose', 0))
-                if current_price > 0:
-                    annual_dividend = last_dividend * (4 if frequency == "Trimestrale" else 
-                                                     2 if frequency == "Semestrale" else 1)
-                    dividend_yield = (annual_dividend / current_price) * 100
-                else:
-                    dividend_yield = 0
-                
-                # Data di pagamento stimata (solitamente ~3 settimane dopo ex-date)
-                payment_date = next_ex_date + timedelta(days=21)
-                
-                # Affidabilità
-                reliability = self.calculate_reliability_score(dividends, info)
-                
-                dividend_data.append({
-                    'Nome Azienda': info.get('longName', symbol),
-                    'Simbolo': symbol,
-                    'Ex-Dividend Date': next_ex_date.strftime('%Y-%m-%d'),
-                    'Dividendo ($)': round(last_dividend, 4),
-                    'Frequenza': frequency,
-                    'Data Pagamento': payment_date.strftime('%Y-%m-%d'),
-                    'Yield (%)': round(dividend_yield, 2),
-                    'Affidabilità': '⭐' * reliability + '☆' * (5 - reliability)
-                })
-                
+                result = self.process_symbol(symbol)
+                if result:
+                    dividend_data.append(result)
             except Exception as e:
-                print(f"Errore nel recuperare dati per {symbol}: {e}")
+                print(f"Error retrieving data for {symbol}: {e}")
                 continue
         
         return pd.DataFrame(dividend_data)

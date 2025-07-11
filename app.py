@@ -5,36 +5,40 @@ from datetime import datetime, timedelta
 import requests
 from dividend_api import DividendCalendar
 
-# Configurazione della pagina
+DOLLAR_DIVIDEND = 'Dividend ($)'
+EX_DIVIDEND_DATE = 'Ex-Dividend Date'
+YIELD_PERCENTAGE = 'Yield (%)'
+
+# Page configuration
 st.set_page_config(
-    page_title="Calendario Dividendi",
+    page_title="Dividend Calendar",
     page_icon="💰",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Funzione per ottenere il tasso di cambio
-@st.cache_data(ttl=1800)  # Cache per 30 minuti
+# Function to get exchange rate
+@st.cache_data(ttl=1800)  # Cache for 30 minutes
 def get_exchange_rate(from_currency="USD", to_currency="EUR"):
-    """Ottiene il tasso di cambio in tempo reale usando l'API di ExchangeRate-API"""
+    """Gets real-time exchange rate using ExchangeRate-API"""
     if from_currency == to_currency:
         return 1.0
     
     try:
-        # API gratuita per tassi di cambio
+        # Free API for exchange rates
         url = f"https://api.exchangerate-api.com/v4/latest/{from_currency}"
         response = requests.get(url, timeout=10)
         response.raise_for_status()
         data = response.json()
         return data['rates'].get(to_currency, 1.0)
     except Exception as e:
-        st.warning(f"Errore nel recupero del tasso di cambio: {e}. Usando tasso approssimativo.")
-        # Tasso di fallback approssimativo USD -> EUR
+        st.warning(f"Error retrieving exchange rate: {e}. Using approximate rate.")
+        # Approximate fallback rate USD -> EUR
         return 0.85 if to_currency == "EUR" else 1.0
 
-# Funzione per formattare valori monetari
+# Function to format currency values
 def format_currency(value, currency_code, symbol):
-    """Formatta un valore monetario con il simbolo corretto"""
+    """Formats a monetary value with the correct symbol"""
     if currency_code == "USD":
         return f"${value:.2f}"
     elif currency_code == "EUR":
@@ -42,143 +46,143 @@ def format_currency(value, currency_code, symbol):
     else:
         return f"{symbol}{value:.2f}"
 
-# Funzione per convertire valori monetari
+# Function to convert currency values
 def convert_currency_value(value, exchange_rate):
-    """Converte un valore monetario usando il tasso di cambio"""
+    """Converts a monetary value using the exchange rate"""
     return value * exchange_rate
 
-# Titolo principale
-st.title("💰 Calendario Dividendi Mondiale")
+# Main title
+st.title("💰 World Dividend Calendar")
 st.markdown("---")
 
-# Caricamento dati
-@st.cache_data(ttl=3600)  # Cache per 1 ora
+# Loading data
+@st.cache_data(ttl=3600)  # Cache for 1 hour
 def load_dividend_data():
     calendar = DividendCalendar()
     return calendar.get_dividend_data()
 
-# Carica i dati
-with st.spinner('Caricamento dati sui dividendi...'):
+# Load data
+with st.spinner('Loading dividend data...'):
     df = load_dividend_data()
 
 if df.empty:
-    st.error("Nessun dato sui dividendi disponibile.")
+    st.error("No dividend data available.")
     st.stop()
 
-# Sidebar per i filtri
-st.sidebar.header("🔍 Filtri")
+# Sidebar for filters
+st.sidebar.header("🔍 Filters")
 
-# Selezione valuta
-st.sidebar.subheader("💱 Valuta")
+# Currency selection
+st.sidebar.subheader("💱 Currency")
 currency_options = {
     "USD ($)": {"code": "USD", "symbol": "$"},
     "EUR (€)": {"code": "EUR", "symbol": "€"}
 }
 
 selected_currency_display = st.sidebar.selectbox(
-    "Seleziona valuta:",
+    "Select currency:",
     list(currency_options.keys()),
-    index=0  # USD di default
+    index=0  # USD default
 )
 
 selected_currency = currency_options[selected_currency_display]
 currency_code = selected_currency["code"]
 currency_symbol = selected_currency["symbol"]
 
-# Ottieni il tasso di cambio
+# Get exchange rate
 if currency_code != "USD":
-    with st.spinner(f'Caricamento tasso di cambio USD → {currency_code}...'):
+    with st.spinner(f'Loading exchange rate USD → {currency_code}...'):
         exchange_rate = get_exchange_rate("USD", currency_code)
-        st.sidebar.success(f"Tasso USD→{currency_code}: {exchange_rate:.4f}")
+        st.sidebar.success(f"Rate USD→{currency_code}: {exchange_rate:.4f}")
 else:
     exchange_rate = 1.0
 
-# Filtro per nome azienda
+# Filter by company name
 company_search = st.sidebar.text_input(
-    "Cerca per nome azienda:",
-    placeholder="Inserisci il nome dell'azienda..."
+    "Search by company name:",
+    placeholder="Enter company name..."
 )
 
-# Filtro per data ex-dividend
-st.sidebar.subheader("Filtro Data Ex-Dividend")
+# Filter by ex-dividend date
+st.sidebar.subheader("Ex-Dividend Date Filter")
 min_date = datetime.now() + timedelta(days=1)
 max_date = datetime.now() + timedelta(days=365)
 
 date_filter = st.sidebar.date_input(
-    "Data minima ex-dividend:",
+    "Minimum ex-dividend date:",
     value=min_date,
     min_value=min_date,
     max_value=max_date
 )
 
-# Applicazione filtri
+# Apply filters
 filtered_df = df.copy()
 
-# Conversione valuta per la visualizzazione
-filtered_df['Dividendo_Convertito'] = filtered_df['Dividendo ($)'].apply(
+# Currency conversion for display
+filtered_df['Dividend_Converted'] = filtered_df[DOLLAR_DIVIDEND].apply(
     lambda x: convert_currency_value(x, exchange_rate)
 )
 
-# Filtro per nome azienda
+# Filter by company name
 if company_search:
     filtered_df = filtered_df[
-        filtered_df['Nome Azienda'].str.contains(company_search, case=False, na=False) |
-        filtered_df['Simbolo'].str.contains(company_search, case=False, na=False)
+        filtered_df['Company Name'].str.contains(company_search, case=False, na=False) |
+        filtered_df['Symbol'].str.contains(company_search, case=False, na=False)
     ]
 
-# Filtro per data
-filtered_df['Ex-Dividend Date'] = pd.to_datetime(filtered_df['Ex-Dividend Date'])
-filtered_df = filtered_df[filtered_df['Ex-Dividend Date'] >= pd.to_datetime(date_filter)]
+# Filter by ex-dividend date
+filtered_df[EX_DIVIDEND_DATE] = pd.to_datetime(filtered_df[EX_DIVIDEND_DATE])
+filtered_df = filtered_df[filtered_df[EX_DIVIDEND_DATE] >= pd.to_datetime(date_filter)]
 
-# Riconverti le date in stringhe per la visualizzazione
-filtered_df['Ex-Dividend Date'] = filtered_df['Ex-Dividend Date'].dt.strftime('%Y-%m-%d')
+# Convert dates back to strings for display
+filtered_df[EX_DIVIDEND_DATE] = filtered_df[EX_DIVIDEND_DATE].dt.strftime('%Y-%m-%d')
 
-# Statistiche principali
+# Main statistics
 col1, col2, col3, col4 = st.columns(4)
 
 with col1:
-    st.metric("🏢 Aziende Totali", len(filtered_df))
+    st.metric("🏢 Total Companies", len(filtered_df))
 
 with col2:
-    avg_yield = filtered_df['Yield (%)'].mean()
-    st.metric("📈 Yield Medio", f"{avg_yield:.2f}%")
+    avg_yield = filtered_df[YIELD_PERCENTAGE].mean()
+    st.metric("📈 Average Yield", f"{avg_yield:.2f}%")
 
 with col3:
-    avg_dividend = filtered_df['Dividendo_Convertito'].mean()
-    st.metric("💵 Dividendo Medio", format_currency(avg_dividend, currency_code, currency_symbol))
+    avg_dividend = filtered_df['Dividend_Converted'].mean()
+    st.metric("💵 Average Dividend", format_currency(avg_dividend, currency_code, currency_symbol))
 
 with col4:
-    high_yield_count = len(filtered_df[filtered_df['Yield (%)'] > 5])
+    high_yield_count = len(filtered_df[filtered_df[YIELD_PERCENTAGE] > 5])
     st.metric("⭐ Yield > 5%", high_yield_count)
 
 st.markdown("---")
 
-# Tabella principale
-st.subheader("📊 Calendario Dividendi")
+# Main table
+st.subheader("📊 Dividend Calendar")
 
 if not filtered_df.empty:
-    # Prepara i dati per la visualizzazione con la valuta convertita
+    # Prepare data for display with converted currency
     display_df = filtered_df.copy()
-    display_df[f'Dividendo ({currency_symbol})'] = display_df['Dividendo_Convertito']
+    display_df[f'Dividend ({currency_symbol})'] = display_df['Dividend_Converted']
     
-    # Rimuovi la colonna temporanea
-    display_df = display_df.drop('Dividendo_Convertito', axis=1)
-    display_df = display_df.drop('Dividendo ($)', axis=1)
+    # Remove temporary column
+    display_df = display_df.drop('Dividend_Converted', axis=1)
+    display_df = display_df.drop(DOLLAR_DIVIDEND, axis=1)
     
-    # Configurazione delle colonne per una migliore visualizzazione
+    # Configure columns for better display
     column_config = {
-        "Nome Azienda": st.column_config.TextColumn("Nome Azienda", width="medium"),
-        "Simbolo": st.column_config.TextColumn("Simbolo", width="small"),
+        "Company Name": st.column_config.TextColumn("Company Name", width="medium"),
+        "Symbol": st.column_config.TextColumn("Symbol", width="small"),
         "Ex-Dividend Date": st.column_config.DateColumn("Ex-Dividend Date", width="medium"),
-        f"Dividendo ({currency_symbol})": st.column_config.NumberColumn(
-            f"Dividendo ({currency_symbol})", 
+        f"Dividend ({currency_symbol})": st.column_config.NumberColumn(
+            f"Dividend ({currency_symbol})", 
             format=f"{currency_symbol}%.4f", 
             width="small"
         ),
-        "Frequenza": st.column_config.TextColumn("Frequenza", width="small"),
-        "Data Pagamento": st.column_config.DateColumn("Data Pagamento", width="medium"),
-        "Yield (%)": st.column_config.NumberColumn("Yield (%)", format="%.2f%%", width="small"),
-        "Affidabilità": st.column_config.TextColumn("Affidabilità", width="small")
+        "Frequency": st.column_config.TextColumn("Frequency", width="small"),
+        "Payment Date": st.column_config.DateColumn("Payment Date", width="medium"),
+         YIELD_PERCENTAGE: st.column_config.NumberColumn(YIELD_PERCENTAGE, format="%.2f%%", width="small"),
+        "Reliability": st.column_config.TextColumn("Reliability", width="small")
     }
     
     st.dataframe(
@@ -189,29 +193,29 @@ if not filtered_df.empty:
         height=600
     )
     
-    # Opzione per scaricare i dati
+    # Option to download data
     csv = display_df.to_csv(index=False)
     st.download_button(
-        label="📥 Scarica dati CSV",
+        label="📥 Download CSV data",
         data=csv,
-        file_name=f"calendario_dividendi_{currency_code}_{datetime.now().strftime('%Y%m%d')}.csv",
+        file_name=f"dividend_calendar_{currency_code}_{datetime.now().strftime('%Y%m%d')}.csv",
         mime="text/csv"
     )
 else:
-    st.warning("Nessuna azienda trovata con i filtri applicati.")
+    st.warning("No companies found with applied filters.")
 
-# Simulatore di Guadagni da Dividendi
+# Dividend Earnings Simulator
 st.markdown("---")
-st.subheader("💰 Simulatore Guadagni Dividendi")
+st.subheader("💰 Dividend Earnings Simulator")
 
 col_sim1, col_sim2 = st.columns([1, 2])
 
 with col_sim1:
-    st.markdown("#### 📊 Parametri Investimento")
+    st.markdown("#### 📊 Investment Parameters")
     
-    # Input per l'importo da investire
+    # Input for investment amount
     investment_amount = st.number_input(
-        f"💵 Importo da investire ({currency_symbol}):",
+        f"💵 Amount to invest ({currency_symbol}):",
         min_value=100.0,
         max_value=1000000.0,
         value=10000.0 * exchange_rate,
@@ -219,64 +223,64 @@ with col_sim1:
         format="%.2f"
     )
     
-    # Selezione dell'azienda per la simulazione
+    # Company selection for simulation
     if not filtered_df.empty:
-        company_options = filtered_df['Nome Azienda'] + " (" + filtered_df['Simbolo'] + ")"
+        company_options = filtered_df['Company Name'] + " (" + filtered_df['Symbol'] + ")"
         selected_company_idx = st.selectbox(
-            "🏢 Seleziona Azienda:",
+            "🏢 Select Company:",
             range(len(company_options)),
             format_func=lambda x: company_options.iloc[x]
         )
         
-        # Ottieni i dati dell'azienda selezionata
+        # Get selected company data
         selected_company = filtered_df.iloc[selected_company_idx]
         
-        # Calcola il numero di azioni acquistabili
-        dividend_per_share_original = selected_company['Dividendo ($)']
+        # Calculate purchasable shares
+        dividend_per_share_original = selected_company[DOLLAR_DIVIDEND]
         dividend_per_share_converted = convert_currency_value(dividend_per_share_original, exchange_rate)
-        dividend_yield_decimal = selected_company['Yield (%)'] / 100
+        dividend_yield_decimal = selected_company[YIELD_PERCENTAGE] / 100
         
-        # Stima del prezzo dell'azione basato su dividend yield (convertito)
+        # Estimate share price based on dividend yield (converted)
         estimated_price_usd = dividend_per_share_original / (dividend_yield_decimal / 4) if dividend_yield_decimal > 0 else 100
         estimated_price_converted = convert_currency_value(estimated_price_usd, exchange_rate)
         
         shares_buyable = investment_amount / estimated_price_converted
         
-        st.markdown("#### 📈 Risultati Simulazione")
-        st.metric("🎯 Azienda Selezionata", f"{selected_company['Simbolo']}")
-        st.metric("💸 Prezzo Stimato per Azione", format_currency(estimated_price_converted, currency_code, currency_symbol))
-        st.metric("📊 Azioni Acquistabili", f"{shares_buyable:.0f}")
+        st.markdown("#### 📈 Simulation Results")
+        st.metric("🎯 Selected Company", f"{selected_company['Symbol']}")
+        st.metric("💸 Estimated Price per Share", format_currency(estimated_price_converted, currency_code, currency_symbol))
+        st.metric("📊 Purchasable Shares", f"{shares_buyable:.0f}")
 
 with col_sim2:
     if not filtered_df.empty:
-        st.markdown("#### 💰 Proiezione Guadagni Dividendi")
+        st.markdown("#### 💰 Dividend Earnings Projection")
         
-        # Calcola i guadagni per diversi periodi
+        # Calculate earnings for different periods
         dividend_per_payment = shares_buyable * dividend_per_share_converted
-        frequency = selected_company['Frequenza']
+        frequency = selected_company['Frequency']
         
-        # Determina quanti pagamenti all'anno
+        # Determine payments per year
         payments_per_year = {
-            'Trimestrale': 4,
-            'Semestrale': 2,
-            'Annuale': 1,
-            'Irregolare': 2  # Assumiamo 2 come default
+            'Quarterly': 4,
+            'Semi-annual': 2,
+            'Annual': 1,
+            'Irregular': 2  # Assume 2 as default
         }.get(frequency, 4)
         
         annual_dividend = dividend_per_payment * payments_per_year
         
-        # Crea un DataFrame per la proiezione
+        # Create projection DataFrame
         projection_data = {
-            'Periodo': ['Singolo Pagamento', '6 Mesi', '1 Anno', '2 Anni', '5 Anni'],
-            'Numero Pagamenti': [1, payments_per_year//2, payments_per_year, payments_per_year*2, payments_per_year*5],
-            f'Guadagno Dividendi ({currency_symbol})': [
+            'Period': ['Single Payment', '6 Months', '1 Year', '2 Years', '5 Years'],
+            'Number of Payments': [1, payments_per_year//2, payments_per_year, payments_per_year*2, payments_per_year*5],
+            f'Dividend Earnings ({currency_symbol})': [
                 dividend_per_payment,
                 dividend_per_payment * (payments_per_year//2),
                 annual_dividend,
                 annual_dividend * 2,
                 annual_dividend * 5
             ],
-            'Yield sul Capitale (%)': [
+            'Yield on Capital (%)': [
                 (dividend_per_payment / investment_amount) * 100,
                 (dividend_per_payment * (payments_per_year//2) / investment_amount) * 100,
                 (annual_dividend / investment_amount) * 100,
@@ -287,36 +291,36 @@ with col_sim2:
         
         projection_df = pd.DataFrame(projection_data)
         
-        # Grafico della proiezione guadagni nel tempo
+        # Earnings projection chart
         fig = px.line(
             projection_df, 
-            x='Periodo', 
-            y=f'Guadagno Dividendi ({currency_symbol})',
-            title='📈 Proiezione Guadagni nel Tempo',
+            x='Period', 
+            y=f'Dividend Earnings ({currency_symbol})',
+            title='📈 Earnings Projection Over Time',
             markers=True,
             labels={
-                'Periodo': 'Periodo di Tempo',
-                f'Guadagno Dividendi ({currency_symbol})': f'Guadagno in {currency_code} ({currency_symbol})'
+                'Period': 'Time Period',
+                f'Dividend Earnings ({currency_symbol})': f'Earnings in {currency_code} ({currency_symbol})'
             }
         )
         fig.update_traces(line_color='#1f77b4', marker_size=8)
         fig.update_layout(
             height=400,
-            xaxis_title="Periodo di Tempo",
-            yaxis_title=f"Guadagno Dividendi ({currency_symbol})"
+            xaxis_title="Time Period",
+            yaxis_title=f"Dividend Earnings ({currency_symbol})"
         )
         st.plotly_chart(fig, use_container_width=True)
         
-        # Configurazione colonne per la tabella di proiezione
+        # Projection table column configuration
         projection_config = {
-            "Periodo": st.column_config.TextColumn("Periodo", width="medium"),
-            "Numero Pagamenti": st.column_config.NumberColumn("N° Pagamenti", width="small"),
-            f"Guadagno Dividendi ({currency_symbol})": st.column_config.NumberColumn(
-                f"Guadagno ({currency_symbol})", 
+            "Period": st.column_config.TextColumn("Period", width="medium"),
+            "Number of Payments": st.column_config.NumberColumn("Num. Payments", width="small"),
+            f"Dividend Earnings ({currency_symbol})": st.column_config.NumberColumn(
+                f"Earnings ({currency_symbol})", 
                 format=f"{currency_symbol}%.2f", 
                 width="medium"
             ),
-            "Yield sul Capitale (%)": st.column_config.NumberColumn("Yield (%)", format="%.2f%%", width="medium")
+            "Yield on Capital (%)": st.column_config.NumberColumn("Yield (%)", format="%.2f%%", width="medium")
         }
         
         st.dataframe(
@@ -326,117 +330,117 @@ with col_sim2:
             use_container_width=True
         )
         
-        # Informazioni aggiuntive
+        # Additional information
         if currency_code != "USD":
             st.info(f"""
-            **📋 Dettagli Simulazione:**
-            - **Azienda:** {selected_company['Nome Azienda']} ({selected_company['Simbolo']})
-            - **Frequenza Dividendi:** {frequency}
-            - **Prossima Ex-Dividend:** {selected_company['Ex-Dividend Date']}
-            - **Affidabilità:** {selected_company['Affidabilità']}
-            - **Yield Annuale:** {selected_company['Yield (%)']}%
-            - **Tasso di Cambio USD→{currency_code}:** {exchange_rate:.4f}
+            **📋 Simulation Details:**
+            - **Company:** {selected_company['Company Name']} ({selected_company['Symbol']})
+            - **Dividend Frequency:** {frequency}
+            - **Next Ex-Dividend:** {selected_company['Ex-Dividend Date']}
+            - **Reliability:** {selected_company['Reliability']}
+            - **Annual Yield:** {selected_company[YIELD_PERCENTAGE]}%
+            - **Exchange Rate USD→{currency_code}:** {exchange_rate:.4f}
             """)
         else:
             st.info(f"""
-            **📋 Dettagli Simulazione:**
-            - **Azienda:** {selected_company['Nome Azienda']} ({selected_company['Simbolo']})
-            - **Frequenza Dividendi:** {frequency}
-            - **Prossima Ex-Dividend:** {selected_company['Ex-Dividend Date']}
-            - **Affidabilità:** {selected_company['Affidabilità']}
-            - **Yield Annuale:** {selected_company['Yield (%)']}%
+            **📋 Simulation Details:**
+            - **Company:** {selected_company['Company Name']} ({selected_company['Symbol']})
+            - **Dividend Frequency:** {frequency}
+            - **Next Ex-Dividend:** {selected_company['Ex-Dividend Date']}
+            - **Reliability:** {selected_company['Reliability']}
+            - **Annual Yield:** {selected_company[YIELD_PERCENTAGE]}%
             """)
         
-        # Warning importante
+        # Important warning
         warning_text = """
-        ⚠️ **Disclaimer:** Questa è una simulazione basata sui dati storici. 
-        I dividendi futuri non sono garantiti e possono variare. 
-        Il prezzo delle azioni è stimato e può differire dal valore reale di mercato."""
+        ⚠️ **Disclaimer:** This is a simulation based on historical data. 
+        Future dividends are not guaranteed and may vary. 
+        The share price is estimated and may differ from the actual market value."""
         
         if currency_code != "USD":
-            warning_text += f"""
-        I tassi di cambio sono soggetti a fluttuazioni e possono influenzare significativamente i rendimenti effettivi."""
+            warning_text += """
+        Exchange rates are subject to fluctuations and can significantly affect actual returns."""
         
         warning_text += """
-        Consultare sempre un consulente finanziario prima di investire.
+        Always consult a financial advisor before investing.
         """
         
         st.warning(warning_text)
 
-# Glossario
+# Glossary
 st.markdown("---")
-st.subheader("📖 Glossario dei Termini")
+st.subheader("📖 Glossary of Terms")
 
-with st.expander("🔍 Clicca per aprire il glossario", expanded=False):
+with st.expander("🔍 Click to open the glossary", expanded=False):
     col_gloss1, col_gloss2 = st.columns(2)
     
     with col_gloss1:
         st.markdown("""
-        **📊 Termini Finanziari:**
+        **📊 Financial Terms:**
         
-        **🏢 Simbolo (Ticker)**  
-        Codice abbreviato che identifica univocamente un'azione in borsa (es. AAPL per Apple).
+        **🏢 Symbol (Ticker)**  
+        Abbreviated code that uniquely identifies a stock on the exchange (e.g., AAPL for Apple).
         
-        **💰 Dividendo**  
-        Pagamento in denaro che una società distribuisce ai suoi azionisti, solitamente derivante dai profitti.
+        **💰 Dividend**  
+        Cash payment that a company distributes to its shareholders, usually derived from profits.
         
         **📅 Ex-Dividend Date**  
-        Data dopo la quale l'acquisto di un'azione non dà diritto al prossimo dividendo. Chi possiede l'azione prima di questa data riceverà il dividendo.
+        Date after which purchasing a stock does not entitle you to the next dividend. Those who own the stock before this date will receive the dividend.
         
-        **💳 Data di Pagamento**  
-        Data effettiva in cui il dividendo viene accreditato sul conto dell'azionista.
+        **💳 Payment Date**  
+        Actual date when the dividend is credited to the shareholder's account.
         
         **📈 Dividend Yield**  
-        Percentuale che indica il rendimento annuale del dividendo rispetto al prezzo corrente dell'azione. Formula: (Dividendo Annuale / Prezzo Azione) × 100.
+        Percentage that indicates the annual dividend return relative to the current stock price. Formula: (Annual Dividend / Stock Price) × 100.
         
-        **🔄 Frequenza Dividendi**  
-        - **Trimestrale:** Pagamento ogni 3 mesi (4 volte l'anno)  
-        - **Semestrale:** Pagamento ogni 6 mesi (2 volte l'anno)  
-        - **Annuale:** Pagamento una volta l'anno  
-        - **Irregolare:** Pagamenti senza una frequenza fissa
+        **🔄 Dividend Frequency**  
+        - **Quarterly:** Payment every 3 months (4 times a year)  
+        - **Semi-annual:** Payment every 6 months (2 times a year)  
+        - **Annual:** Payment once a year  
+        - **Irregular:** Payments without a fixed frequency
         
-        **💱 Conversione Valuta**  
-        I tassi di cambio vengono aggiornati ogni 30 minuti tramite API in tempo reale. Tutti i valori monetari vengono convertiti dalla valuta originale (USD) alla valuta selezionata.
+        **💱 Currency Conversion**  
+        Exchange rates are updated every 30 minutes via real-time API. All monetary values are converted from the original currency (USD) to the selected currency.
         """)
     
     with col_gloss2:
         st.markdown("""
-        **⭐ Termini dell'Applicazione:**
+        **⭐ Application Terms:**
         
-        **🎯 Affidabilità**  
-        Sistema di valutazione a stelle (⭐⭐⭐⭐⭐) che indica la stabilità e consistenza dei dividendi di un'azienda, basato su:
-        - Consistenza dei pagamenti negli anni
-        - Dimensione dell'azienda (market cap)
-        - Sostenibilità del payout ratio
+        **🎯 Reliability**  
+        Star rating system (⭐⭐⭐⭐⭐) indicating the stability and consistency of a company's dividends, based on:
+        - Consistency of payments over the years
+        - Company size (market cap)
+        - Sustainability of the payout ratio
         
-        **💸 Prezzo Stimato per Azione**  
-        Valore approssimativo dell'azione calcolato in base al dividend yield e all'importo del dividendo, convertito nella valuta selezionata.
+        **💸 Estimated Price per Share**  
+        Approximate value of the stock calculated based on dividend yield and dividend amount, converted to the selected currency.
         
-        **📊 Azioni Acquistabili**  
-        Numero di azioni che si possono comprare con l'importo investito, considerando il prezzo stimato nella valuta selezionata.
+        **📊 Purchasable Shares**  
+        Number of shares that can be bought with the invested amount, considering the estimated price in the selected currency.
         
-        **💵 Yield sul Capitale**  
-        Percentuale di rendimento che i dividendi rappresentano rispetto al capitale investito.
+        **💵 Yield on Capital**  
+        Percentage return that dividends represent relative to the invested capital.
         
-        **🔮 Proiezione Guadagni**  
-        Calcolo stimato dei dividendi che si potrebbero ricevere in diversi periodi di tempo, basato sui dati storici e convertito nella valuta selezionata.
+        **🔮 Earnings Projection**  
+        Estimated calculation of dividends that could be received over different time periods, based on historical data and converted to the selected currency.
         
-        **⚠️ Importante:**  
-        Tutti i calcoli sono stime basate su dati storici. I mercati finanziari sono volatili e i risultati effettivi possono differire significativamente dalle proiezioni. Le fluttuazioni del tasso di cambio possono influenzare ulteriormente i rendimenti.
+        **⚠️ Important:**  
+        All calculations are estimates based on historical data. Financial markets are volatile and actual results may differ significantly from projections. Exchange rate fluctuations can further affect returns.
         """)
 
 # Footer
-footer_text = f"""
+footer_text = """
 <div style='text-align: center; color: #666; font-size: 0.9em;'>
-💡 I dati sono forniti da Yahoo Finance e vengono aggiornati ogni ora.<br>
-💱 Tassi di cambio aggiornati ogni 30 minuti tramite ExchangeRate-API.<br>
+💡 Data is provided by Yahoo Finance and updated every hour.<br>
+💱 Exchange rates updated every 30 minutes via ExchangeRate-API.<br>
 """
 
 if currency_code != "USD":
-    footer_text += f"🔄 Valuta corrente: {currency_code} (Tasso USD→{currency_code}: {exchange_rate:.4f})<br>"
+    footer_text += f"🔄 Current currency: {currency_code} (Rate USD→{currency_code}: {exchange_rate:.4f})<br>"
 
 footer_text += """
-⚠️ Le informazioni sono solo a scopo informativo e non costituiscono consigli di investimento.
+⚠️ Information is for informational purposes only and does not constitute investment advice.
 </div>
 """
 

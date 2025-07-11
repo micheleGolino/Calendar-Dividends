@@ -1,42 +1,42 @@
-# 💰 Calendario Dividendi Mondiale
+# 💰 Global Dividend Calendar
 
-Un'applicazione web interattiva costruita con **Streamlit** per monitorare, analizzare e simulare i dividendi delle azioni più importanti del mercato mondiale.
+An interactive web application built with **Streamlit** to monitor, analyze and simulate dividends from the most important stocks in the global market.
 
 ![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)
 ![Streamlit](https://img.shields.io/badge/Streamlit-1.41.0-red.svg)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 
-## 📋 Descrizione
+## 📋 Description
 
-Il **Calendario Dividendi Mondiale** è uno strumento completo per investitori che vogliono:
+The **Global Dividend Calendar** is a comprehensive tool for investors who want to:
 
-- 📊 **Monitorare i dividendi** di oltre 140 aziende quotate
-- 🔍 **Filtrare e cercare** aziende per nome o simbolo ticker
-- 💱 **Convertire valute** in tempo reale (USD ↔ EUR)
-- 💰 **Simulare guadagni** da investimenti in dividendi
-- 📈 **Visualizzare proiezioni** di rendimento nel tempo
-- 📥 **Esportare dati** in formato CSV
+- 📊 **Monitor dividends** from over 140 listed companies
+- 🔍 **Filter and search** companies by name or ticker symbol
+- 💱 **Convert currencies** in real-time (USD ↔ EUR)
+- 💰 **Simulate earnings** from dividend investments
+- 📈 **Visualize projections** of returns over time
+- 📥 **Export data** in CSV format
 
-## ✨ Funzionalità Principali
+## ✨ Main Features
 
-### 🎯 Dashboard Principale
-- **Statistiche in tempo reale**: Numero totale aziende, yield medio, dividendo medio
-- **Tabella interattiva**: Calendario completo con tutte le informazioni sui dividendi
-- **Filtri avanzati**: Per data ex-dividend e ricerca per nome/simbolo
+### 🎯 Main Dashboard
+- **Real-time statistics**: Total number of companies, average yield, average dividend
+- **Interactive table**: Complete calendar with all dividend information
+- **Advanced filters**: By ex-dividend date and search by name/symbol
 
-### 💱 Conversione Valuta
-- **Supporto multi-valuta**: USD (dollaro) ed EUR (euro)
-- **Tassi di cambio in tempo reale**: Aggiornati ogni 30 minuti via API
-- **Conversione automatica**: Tutti i valori monetari vengono convertiti dinamicamente
+### 💱 Currency Conversion
+- **Multi-currency support**: USD (dollar) and EUR (euro)
+- **Real-time exchange rates**: Updated every 30 minutes via API
+- **Automatic conversion**: All monetary values are dynamically converted
 
-### 💰 Simulatore di Investimenti
-- **Calcolo rendimenti**: Stima guadagni basata su importo investito
-- **Proiezioni temporali**: Visualizza rendimenti a 6 mesi, 1 anno, 2 anni, 5 anni
-- **Grafici interattivi**: Visualizzazione dell'andamento nel tempo
-- **Analisi dettagliata**: Informazioni complete sull'azienda selezionata
+### 💰 Investment Simulator
+- **Return calculations**: Estimate earnings based on invested amount
+- **Time projections**: View returns at 6 months, 1 year, 2 years, 5 years
+- **Interactive charts**: Visualization of trends over time
+- **Detailed analysis**: Complete information on the selected company
 
-### 📊 Copertura del Mercato
-L'applicazione monitora oltre **140 simboli azionari** suddivisi per settore:
+### 📊 Market Coverage
+The application monitors over **140 stock symbols** divided by sector:
 
 - 🖥️ **Technology**: AAPL, MSFT, GOOGL, NVDA, META, ORCL, ADBE, AMD...
 - 🏥 **Healthcare**: JNJ, PFE, UNH, ABBV, LLY, TMO, ABT...
@@ -47,140 +47,140 @@ L'applicazione monitora oltre **140 simboli azionari** suddivisi per settore:
 - 🏭 **Industrial**: GE, MMM, HON, CAT, BA...
 - 🏢 **REITs**: AMT, PLD, CCI, EQIX, SPG...
 
-## 🚀 Come Avviare il Progetto
+## 🚀 How to Run the Project
 
-### Prerequisiti
+### Prerequisites
 
-- **Python 3.8+** installato sul sistema
-- **pip** (gestore pacchetti Python)
-- Connessione internet (per API di dati finanziari e tassi di cambio)
+- **Python 3.8+** installed on the system
+- **pip** (Python package manager)
+- Internet connection (for financial data APIs and exchange rates)
 
-### 1. Clona il Repository
+### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/tuo-username/Calendar-Dividends.git
+git clone https://github.com/your-username/Calendar-Dividends.git
 cd Calendar-Dividends
 ```
 
-### 2. Installa le Dipendenze
+### 2. Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 3. Avvia l'Applicazione
+### 3. Launch the Application
 
 ```bash
 streamlit run app.py
 ```
 
-### 4. Accedi all'Applicazione
+### 4. Access the Application
 
-L'applicazione si aprirà automaticamente nel browser all'indirizzo:
+The application will automatically open in your browser at:
 ```
 http://localhost:8501
 ```
 
-## 📦 Dipendenze
+## 📦 Dependencies
 
-Il progetto utilizza le seguenti librerie principali:
+The project uses the following main libraries:
 
 ```
-streamlit==1.41.0      # Framework web per l'interfaccia
-yfinance>=0.2.18       # API per dati finanziari Yahoo Finance
-pandas>=2.1.0          # Manipolazione e analisi dati
-numpy>=1.25.0          # Calcoli numerici
-plotly>=5.0.0          # Grafici interattivi
-requests==2.31.0       # Richieste HTTP per API di cambio valuta
-watchdog>=3.0.0        # Monitoraggio file system
+streamlit==1.41.0      # Web framework for the interface
+yfinance>=0.2.18       # Yahoo Finance financial data API
+pandas>=2.1.0          # Data manipulation and analysis
+numpy>=1.25.0          # Numerical calculations
+plotly>=5.0.0          # Interactive charts
+requests==2.31.0       # HTTP requests for currency exchange API
+watchdog>=3.0.0        # File system monitoring
 ```
 
-## 🔧 Struttura del Progetto
+## 🔧 Project Structure
 
 ```
 Calendar-Dividends/
 │
-├── app.py                 # Applicazione principale Streamlit
-├── dividend_api.py        # Classe per recupero dati dividendi
-├── requirements.txt       # Dipendenze Python
-├── README.md             # Documentazione progetto
+├── app.py                 # Main Streamlit application
+├── dividend_api.py        # Class for dividend data retrieval
+├── requirements.txt       # Python dependencies
+├── README.md             # Project documentation
 │
-└── (file generati automaticamente da Streamlit)
+└── (files automatically generated by Streamlit)
 ```
 
-## 📊 Fonti Dati
+## 📊 Data Sources
 
-- **🔢 Dati Finanziari**: [Yahoo Finance](https://finance.yahoo.com/) via libreria `yfinance`
-- **💱 Tassi di Cambio**: [ExchangeRate-API](https://exchangerate-api.com/) - API gratuita
-- **⏰ Aggiornamento**: 
-  - Dati dividendi: ogni ora (cache)
-  - Tassi di cambio: ogni 30 minuti (cache)
+- **🔢 Financial Data**: [Yahoo Finance](https://finance.yahoo.com/) via `yfinance` library
+- **💱 Exchange Rates**: [ExchangeRate-API](https://exchangerate-api.com/) - Free API
+- **⏰ Updates**: 
+  - Dividend data: every hour (cached)
+  - Exchange rates: every 30 minutes (cached)
 
-## 🎯 Come Utilizzare l'Applicazione
+## 🎯 How to Use the Application
 
-### 1. **Esplora il Calendario**
-- Visualizza la tabella principale con tutti i dividendi
-- Usa i filtri nella sidebar per personalizzare la vista
-- Ordina le colonne cliccando sui headers
+### 1. **Explore the Calendar**
+- View the main table with all dividends
+- Use filters in the sidebar to customize the view
+- Sort columns by clicking on headers
 
-### 2. **Cambia Valuta**
-- Seleziona EUR dalla dropdown "Valuta" nella sidebar
-- Tutti i valori si convertiranno automaticamente
+### 2. **Change Currency**
+- Select EUR from the "Currency" dropdown in the sidebar
+- All values will automatically convert
 
-### 3. **Simula un Investimento**
-- Scorri verso il basso fino al "Simulatore Guadagni Dividendi"
-- Inserisci l'importo che vuoi investire
-- Seleziona un'azienda dalla dropdown
-- Visualizza le proiezioni di guadagno nel tempo
+### 3. **Simulate an Investment**
+- Scroll down to the "Dividend Earnings Simulator"
+- Enter the amount you want to invest
+- Select a company from the dropdown
+- View earning projections over time
 
-### 4. **Esporta i Dati**
-- Clicca su "📥 Scarica dati CSV" per esportare la tabella filtrata
-- Il file includerà tutti i dati nella valuta selezionata
+### 4. **Export Data**
+- Click "📥 Download CSV data" to export the filtered table
+- The file will include all data in the selected currency
 
-## ⚠️ Limitazioni e Disclaimer
+## ⚠️ Limitations and Disclaimer
 
-- **📊 Dati Storici**: Le proiezioni sono basate su dati storici e non garantiscono risultati futuri
-- **💱 Fluttuazioni Valutarie**: I tassi di cambio possono influenzare significativamente i rendimenti
-- **🎯 Stime dei Prezzi**: I prezzi delle azioni sono stimati basandosi sul dividend yield
-- **⚖️ Non è Consulenza Finanziaria**: L'applicazione è solo a scopo informativo
+- **📊 Historical Data**: Projections are based on historical data and do not guarantee future results
+- **💱 Currency Fluctuations**: Exchange rates can significantly influence returns
+- **🎯 Price Estimates**: Stock prices are estimated based on dividend yield
+- **⚖️ Not Financial Advice**: The application is for informational purposes only
 
-## 🛠️ Sviluppo e Contributi
+## 🛠️ Development and Contributions
 
-### Estendere l'Applicazione
+### Extending the Application
 
-Per aggiungere nuovi simboli azionari, modifica la lista `self.symbols` in `dividend_api.py`:
+To add new stock symbols, modify the `self.symbols` list in `dividend_api.py`:
 
 ```python
 self.symbols = [
-    'AAPL', 'MSFT', # ... simboli esistenti
-    'NUOVO_SIMBOLO'  # Aggiungi qui
+    'AAPL', 'MSFT', # ... existing symbols
+    'NEW_SYMBOL'  # Add here
 ]
 ```
 
-### Aggiungere Nuove Valute
+### Adding New Currencies
 
-Per supportare nuove valute, modifica il dizionario `currency_options` in `app.py`:
+To support new currencies, modify the `currency_options` dictionary in `app.py`:
 
 ```python
 currency_options = {
     "USD ($)": {"code": "USD", "symbol": "$"},
     "EUR (€)": {"code": "EUR", "symbol": "€"},
-    "GBP (£)": {"code": "GBP", "symbol": "£"}  # Nuova valuta
+    "GBP (£)": {"code": "GBP", "symbol": "£"}  # New currency
 }
 ```
 
-## 📄 Licenza
+## 📄 License
 
-Questo progetto è rilasciato sotto licenza MIT. Vedi il file `LICENSE` per i dettagli.
+This project is released under the MIT license. See the `LICENSE` file for details.
 
-## 🤝 Supporto
+## 🤝 Support
 
-Per domande, problemi o suggerimenti:
+For questions, issues or suggestions:
 
-1. **Issues**: Apri una issue su GitHub
-2. **Documentation**: Consulta il glossario integrato nell'app
-3. **Updates**: Controlla regolarmente per aggiornamenti
+1. **Issues**: Open an issue on GitHub
+2. **Documentation**: Consult the integrated glossary in the app
+3. **Updates**: Check regularly for updates
 
 ---
 
-**🎯 Buon investimento e monitoraggio dividendi!** 💰📈
+**🎯 Happy investing and dividend monitoring!** 💰📈
