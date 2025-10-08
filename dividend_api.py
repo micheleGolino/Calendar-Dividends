@@ -2,6 +2,7 @@ import yfinance as yf
 import pandas as pd
 from datetime import datetime, timedelta
 import numpy as np
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 class DividendCalendar:
     def __init__(self):
@@ -25,7 +26,7 @@ class DividendCalendar:
             
             # Energy
             'XOM', 'CVX', 'COP', 'EOG', 'SLB', 'PSX', 'VLO', 'MPC', 'KMI', 'OKE',
-            'EPD', 'ET', 'WMB', 'ENB', 'TRP', 'SU', 'CNQ', 'IMO', 'CVE', 'HES',
+            'EPD', 'ET', 'WMB', 'ENB', 'TRP', 'SU', 'CNQ', 'IMO', 'CVE',
             
             # Utilities
             'NEE', 'DUK', 'SO', 'D', 'EXC', 'SRE', 'AEP', 'XEL', 'PEG', 'ED',
@@ -39,7 +40,7 @@ class DividendCalendar:
             'T', 'VZ', 'TMUS', 'CHTR', 'CMCSA',
             
             # Payment & FinTech
-            'V', 'MA', 'PYPL', 'SQ', 'FIS', 'FISV',
+            'V', 'MA', 'PYPL', 'FIS',
             
             # REITs
             'AMT', 'PLD', 'CCI', 'EQIX', 'SPG', 'O', 'WELL', 'EXR', 'AVB', 'EQR',
@@ -48,7 +49,7 @@ class DividendCalendar:
             'LIN', 'APD', 'ECL', 'SHW', 'DD', 'DOW', 'PPG', 'NEM', 'FCX', 'NUE',
             
             # Food & Beverage
-            'MDLZ', 'KHC', 'STZ', 'TAP', 'TSN', 'HRL', 'SJM', 'BF.B',
+            'MDLZ', 'KHC', 'STZ', 'TAP', 'TSN', 'HRL', 'SJM',
             
             # Aerospace & Defense
             'LHX', 'TDG', 'HWM', 'TXT', 'CW', 'WWD'
@@ -172,16 +173,27 @@ class DividendCalendar:
         }
     
     def get_dividend_data(self):
-        """Retrieves dividend data for all symbols"""
+        """Retrieves dividend data for all symbols using parallel processing"""
         dividend_data = []
         
-        for symbol in self.symbols:
-            try:
-                result = self.process_symbol(symbol)
-                if result:
-                    dividend_data.append(result)
-            except Exception as e:
-                print(f"Error retrieving data for {symbol}: {e}")
-                continue
+        # Use ThreadPoolExecutor to parallelize API calls
+        # max_workers=10 means up to 10 simultaneous API calls
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            # Submit all tasks
+            future_to_symbol = {
+                executor.submit(self.process_symbol, symbol): symbol 
+                for symbol in self.symbols
+            }
+            
+            # Collect results as they complete
+            for future in as_completed(future_to_symbol):
+                symbol = future_to_symbol[future]
+                try:
+                    result = future.result()
+                    if result:
+                        dividend_data.append(result)
+                except Exception as e:
+                    print(f"Error retrieving data for {symbol}: {e}")
+                    continue
         
         return pd.DataFrame(dividend_data)
